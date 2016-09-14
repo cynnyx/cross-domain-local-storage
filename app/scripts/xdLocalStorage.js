@@ -19,8 +19,8 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
   function applyCallback(data) {
     if (requests[data.id]) {
       requests[data.id](data);
-      delete requests[data.id];
     }
+    delete requests[data.id];
   }
 
   function receiveMessage(event) {
