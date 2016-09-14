@@ -83,6 +83,8 @@
         getLength(data.id);
       } else if (data.action === 'clear') {
         clear(data.id);
+      } else if (data.action === 'areYouReady') {
+        sendOnLoad();
       }
     }
   }

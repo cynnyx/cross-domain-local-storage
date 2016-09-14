@@ -8,13 +8,15 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
   var options = {
     iframeId: 'cross-domain-iframe',
     iframeUrl: undefined,
-    initCallback: function () {}
+    iframe: undefined,
+    initCallback: function () {
+    }
   };
   var requestId = -1;
   var iframe;
   var requests = {};
   var wasInit = false;
-  var iframeReady = true;
+  var iframeReady = false;
 
   function applyCallback(data) {
     if (requests[data.id]) {
@@ -32,8 +34,10 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
     }
     if (data && data.namespace === MESSAGE_NAMESPACE) {
       if (data.id === 'iframe-ready') {
-        iframeReady = true;
-        options.initCallback();
+        if(!iframeReady) {
+          iframeReady = true;
+          options.initCallback();
+        }
       } else {
         applyCallback(data);
       }
@@ -55,17 +59,34 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
 
   function init(customOptions) {
     options = XdUtils.extend(customOptions, options);
-    var temp = document.createElement('div');
 
+    _initEventListeners();
+
+    if (options.iframe !== undefined) {
+      _initWithIframe(options);
+    } else  if (options.iframeUrl !== undefined) {
+      _initWithUrl(options);
+    }
+  }
+
+  function _initWithUrl(options) {
+    var temp = document.createElement('div');
+    temp.innerHTML = '<iframe id="' + options.iframeId + '" src=' + options.iframeUrl + ' style="display: none;"></iframe>';
+    document.body.appendChild(temp);
+    iframe = document.getElementById(options.iframeId);
+  }
+
+  function _initWithIframe(options) {
+    iframe = options.iframe;
+    buildMessage('areYouReady');
+  }
+
+  function _initEventListeners() {
     if (window.addEventListener) {
       window.addEventListener('message', receiveMessage, false);
     } else {
       window.attachEvent('onmessage', receiveMessage);
     }
-
-    temp.innerHTML = '<iframe id="' + options.iframeId + '" src=' + options.iframeUrl + ' style="display: none;"></iframe>';
-    document.body.appendChild(temp);
-    iframe = document.getElementById(options.iframeId);
   }
 
   function isApiReady() {
@@ -83,8 +104,8 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
   return {
     //callback is optional for cases you use the api before window load.
     init: function (customOptions) {
-      if (!customOptions.iframeUrl) {
-        throw 'You must specify iframeUrl';
+      if (!customOptions.iframeUrl && !customOptions.iframe) {
+        throw 'You must specify iframeUrl or iframe';
       }
       if (wasInit) {
         console.log('xdLocalStorage was already initialized!');
@@ -110,28 +131,28 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
       if (!isApiReady()) {
         return;
       }
-      buildMessage('get', key,  null, callback);
+      buildMessage('get', key, null, callback);
     },
     removeItem: function (key, callback) {
       if (!isApiReady()) {
         return;
       }
-      buildMessage('remove', key,  null, callback);
+      buildMessage('remove', key, null, callback);
     },
     key: function (index, callback) {
       if (!isApiReady()) {
         return;
       }
-      buildMessage('key', index,  null, callback);
+      buildMessage('key', index, null, callback);
     },
-    getSize: function(callback) {
-      if(!isApiReady()) {
+    getSize: function (callback) {
+      if (!isApiReady()) {
         return;
       }
       buildMessage('size', null, null, callback);
     },
-    getLength: function(callback) {
-      if(!isApiReady()) {
+    getLength: function (callback) {
+      if (!isApiReady()) {
         return;
       }
       buildMessage('length', null, null, callback);
@@ -140,10 +161,10 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
       if (!isApiReady()) {
         return;
       }
-      buildMessage('clear', null,  null, callback);
+      buildMessage('clear', null, null, callback);
     },
     wasInit: function () {
       return wasInit;
     }
   };
-})();
+  })();
