@@ -112,13 +112,7 @@ window.xdLocalStorage = window.xdLocalStorage || (function () {
         return;
       }
       wasInit = true;
-      if (document.readyState === 'complete') {
-        init(customOptions);
-      } else {
-        window.onload = function () {
-          init(customOptions);
-        };
-      }
+      init(customOptions);
     },
     setItem: function (key, value, callback) {
       if (!isApiReady()) {
